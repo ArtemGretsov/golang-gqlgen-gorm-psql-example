@@ -35,6 +35,7 @@ type Config struct {
 }
 
 type ResolverRoot interface {
+	Day() DayResolver
 	Query() QueryResolver
 }
 
@@ -85,6 +86,10 @@ type ComplexityRoot struct {
 	}
 }
 
+type DayResolver interface {
+	Weather(ctx context.Context, obj *model.Day) (*model.Weather, error)
+	Rate(ctx context.Context, obj *model.Day) (*model.Rate, error)
+}
 type QueryResolver interface {
 	Days(ctx context.Context) ([]*model.Day, error)
 }
@@ -322,8 +327,8 @@ type Day {
    id: ID!
    date: Date!
    isFullInfo: Boolean!
-   weather: Weather!
-   rate: Rate!
+   weather: Weather! @goField(forceResolver: true)
+   rate: Rate! @goField(forceResolver: true)
 }`, BuiltIn: false},
 	{Name: "graph/schema/types/popular-query-google.graphql", Input: ``, BuiltIn: false},
 	{Name: "graph/schema/types/rates.graphql", Input: `type RateDifference {
@@ -531,14 +536,14 @@ func (ec *executionContext) _Day_weather(ctx context.Context, field graphql.Coll
 		Object:     "Day",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Weather, nil
+		return ec.resolvers.Day().Weather(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -566,14 +571,14 @@ func (ec *executionContext) _Day_rate(ctx context.Context, field graphql.Collect
 		Object:     "Day",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Rate, nil
+		return ec.resolvers.Day().Rate(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2330,28 +2335,46 @@ func (ec *executionContext) _Day(ctx context.Context, sel ast.SelectionSet, obj 
 		case "id":
 			out.Values[i] = ec._Day_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "date":
 			out.Values[i] = ec._Day_date(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "isFullInfo":
 			out.Values[i] = ec._Day_isFullInfo(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "weather":
-			out.Values[i] = ec._Day_weather(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Day_weather(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "rate":
-			out.Values[i] = ec._Day_rate(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Day_rate(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -2959,6 +2982,10 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 	return res
 }
 
+func (ec *executionContext) marshalNRate2githubᚗcomᚋArtemGretsovᚋgolangᚑexchangesᚑratesᚋgraphᚋmodelᚐRate(ctx context.Context, sel ast.SelectionSet, v model.Rate) graphql.Marshaler {
+	return ec._Rate(ctx, sel, &v)
+}
+
 func (ec *executionContext) marshalNRate2ᚖgithubᚗcomᚋArtemGretsovᚋgolangᚑexchangesᚑratesᚋgraphᚋmodelᚐRate(ctx context.Context, sel ast.SelectionSet, v *model.Rate) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -2992,6 +3019,10 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalNWeather2githubᚗcomᚋArtemGretsovᚋgolangᚑexchangesᚑratesᚋgraphᚋmodelᚐWeather(ctx context.Context, sel ast.SelectionSet, v model.Weather) graphql.Marshaler {
+	return ec._Weather(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalNWeather2ᚖgithubᚗcomᚋArtemGretsovᚋgolangᚑexchangesᚑratesᚋgraphᚋmodelᚐWeather(ctx context.Context, sel ast.SelectionSet, v *model.Weather) graphql.Marshaler {

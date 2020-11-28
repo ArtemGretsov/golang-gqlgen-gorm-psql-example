@@ -17,5 +17,10 @@ func (r *Resolver) Query() generated.QueryResolver {
 	return &queryResolver{r}
 }
 
+func (r *Resolver) Day() generated.DayResolver {
+	return &dayResolver{r}
+}
+
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
+type dayResolver struct{ *Resolver }
