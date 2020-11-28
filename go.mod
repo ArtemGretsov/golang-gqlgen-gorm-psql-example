@@ -1,4 +1,4 @@
-module github.com/ArtemGretsov/golang-exchanges-rates
+module github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example
 
 go 1.15
 

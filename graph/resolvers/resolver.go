@@ -2,8 +2,8 @@
 package resolvers
 
 import (
-	"github.com/ArtemGretsov/golang-exchanges-rates/graph/generated"
-	_ "github.com/ArtemGretsov/golang-exchanges-rates/graph/model"
+	"github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/graph/generated"
+	_ "github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/graph/model"
 	"gorm.io/gorm"
 )
 

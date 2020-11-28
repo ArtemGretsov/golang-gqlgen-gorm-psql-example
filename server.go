@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"github.com/ArtemGretsov/golang-exchanges-rates/graph/model"
-	"github.com/ArtemGretsov/golang-exchanges-rates/graph/resolvers"
+	"github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/graph/model"
+	"github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/graph/resolvers"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -13,7 +13,7 @@ import (
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
-	"github.com/ArtemGretsov/golang-exchanges-rates/graph/generated"
+	"github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/graph/generated"
 	_ "github.com/joho/godotenv"
 	_ "gorm.io/driver/postgres"
 	_ "gorm.io/gorm"

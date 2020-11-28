@@ -3,7 +3,7 @@ package resolvers
 import (
 	"context"
 	"fmt"
-	"github.com/ArtemGretsov/golang-exchanges-rates/graph/model"
+	"github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/graph/model"
 )
 
 func (d dayResolver) Weather(ctx context.Context, obj *model.Day) (*model.Weather, error) {

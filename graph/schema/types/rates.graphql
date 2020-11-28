@@ -1,10 +1,10 @@
-type RateDifference @goModel(model: "github.com/ArtemGretsov/golang-exchanges-rates/graph/model.RateDifference")  {
+type RateDifference @goModel(model: "github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/graph/model.RateDifference")  {
     id: ID!
     USD: String!
     EUR: String!
 }
 
-type Rate @goModel(model: "github.com/ArtemGretsov/golang-exchanges-rates/graph/model.Rate") {
+type Rate @goModel(model: "github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/graph/model.Rate") {
     id: ID!
     USD: Float!
     EUR: Float!

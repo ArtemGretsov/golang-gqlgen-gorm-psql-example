@@ -12,7 +12,7 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
-	"github.com/ArtemGretsov/golang-exchanges-rates/graph/model"
+	"github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/graph/model"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -331,7 +331,7 @@ directive @goField(forceResolver: Boolean, name: String) on INPUT_FIELD_DEFINITI
 }`, BuiltIn: false},
 	{Name: "graph/schema/types/day.graphql", Input: `scalar Date
 
-type Day @goModel(model: "github.com/ArtemGretsov/golang-exchanges-rates/graph/model.Day") {
+type Day @goModel(model: "github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/graph/model.Day") {
    id: ID!
    date: Date!
    isFullInfo: Boolean!
@@ -339,13 +339,13 @@ type Day @goModel(model: "github.com/ArtemGretsov/golang-exchanges-rates/graph/m
    rate: Rate! @goField(forceResolver: true)
 }`, BuiltIn: false},
 	{Name: "graph/schema/types/popular-query-google.graphql", Input: ``, BuiltIn: false},
-	{Name: "graph/schema/types/rates.graphql", Input: `type RateDifference @goModel(model: "github.com/ArtemGretsov/golang-exchanges-rates/graph/model.RateDifference")  {
+	{Name: "graph/schema/types/rates.graphql", Input: `type RateDifference @goModel(model: "github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/graph/model.RateDifference")  {
     id: ID!
     USD: String!
     EUR: String!
 }
 
-type Rate @goModel(model: "github.com/ArtemGretsov/golang-exchanges-rates/graph/model.Rate") {
+type Rate @goModel(model: "github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/graph/model.Rate") {
     id: ID!
     USD: Float!
     EUR: Float!
@@ -355,13 +355,13 @@ type Rate @goModel(model: "github.com/ArtemGretsov/golang-exchanges-rates/graph/
   id: ID!
   name: String!
 }`, BuiltIn: false},
-	{Name: "graph/schema/types/weather.graphql", Input: `type WeatherDifference @goModel(model: "github.com/ArtemGretsov/golang-exchanges-rates/graph/model.WeatherDifference") {
+	{Name: "graph/schema/types/weather.graphql", Input: `type WeatherDifference @goModel(model: "github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/graph/model.WeatherDifference") {
     id: ID!
     temperature: String!
     pressure: String!
 }
 
-type Weather @goModel(model: "github.com/ArtemGretsov/golang-exchanges-rates/graph/model.Weather") {
+type Weather @goModel(model: "github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/graph/model.Weather") {
     id: ID!
     temperature: Int!
     pressure: Int!

@@ -1,10 +1,10 @@
-type WeatherDifference @goModel(model: "github.com/ArtemGretsov/golang-exchanges-rates/graph/model.WeatherDifference") {
+type WeatherDifference @goModel(model: "github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/graph/model.WeatherDifference") {
     id: ID!
     temperature: String!
     pressure: String!
 }
 
-type Weather @goModel(model: "github.com/ArtemGretsov/golang-exchanges-rates/graph/model.Weather") {
+type Weather @goModel(model: "github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/graph/model.Weather") {
     id: ID!
     temperature: Int!
     pressure: Int!
