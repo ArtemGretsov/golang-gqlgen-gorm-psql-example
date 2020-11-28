@@ -4,14 +4,12 @@ package resolvers
 import (
 	"github.com/ArtemGretsov/golang-exchanges-rates/graph/generated"
 	_ "github.com/ArtemGretsov/golang-exchanges-rates/graph/model"
+	"gorm.io/gorm"
 )
 
 type Resolver struct {
+	DB *gorm.DB
 }
-
-//func (r *Resolver) Mutation() generated.MutationResolver {
-//	return &mutationResolver{r}
-//}
 
 func (r *Resolver) Query() generated.QueryResolver {
 	return &queryResolver{r}
@@ -21,6 +19,5 @@ func (r *Resolver) Day() generated.DayResolver {
 	return &dayResolver{r}
 }
 
-type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type dayResolver struct{ *Resolver }

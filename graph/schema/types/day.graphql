@@ -1,6 +1,6 @@
 scalar Date
 
-type Day {
+type Day @goModel(model: "github.com/ArtemGretsov/golang-exchanges-rates/graph/model.Day") {
    id: ID!
    date: Date!
    isFullInfo: Boolean!
