@@ -1,0 +1,9 @@
+scalar Date
+
+type Day {
+   id: ID!
+   date: Date!
+   isFullInfo: Boolean!
+   weather: Weather!
+   rate: Rate!
+}

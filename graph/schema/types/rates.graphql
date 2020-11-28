@@ -1,0 +1,12 @@
+type RateDifference {
+    id: ID!
+    USD: String!
+    EUR: String!
+}
+
+type Rate {
+    id: ID!
+    USD: Float!
+    EUR: Float!
+    difference: RateDifference!
+}

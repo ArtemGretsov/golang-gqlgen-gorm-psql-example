@@ -2,19 +2,40 @@
 
 package model
 
-type NewTodo struct {
-	Text   string `json:"text"`
-	UserID string `json:"userId"`
+type Day struct {
+	ID         string   `json:"id"`
+	Date       string   `json:"date"`
+	IsFullInfo bool     `json:"isFullInfo"`
+	Weather    *Weather `json:"weather"`
+	Rate       *Rate    `json:"rate"`
 }
 
-type Todo struct {
-	ID   string `json:"id"`
-	Text string `json:"text"`
-	Done bool   `json:"done"`
-	User *User  `json:"user"`
+type Rate struct {
+	ID         string          `json:"id"`
+	Usd        float64         `json:"USD"`
+	Eur        float64         `json:"EUR"`
+	Difference *RateDifference `json:"difference"`
+}
+
+type RateDifference struct {
+	ID  string `json:"id"`
+	Usd string `json:"USD"`
+	Eur string `json:"EUR"`
 }
 
 type User struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
+}
+
+type Weather struct {
+	ID          string `json:"id"`
+	Temperature int    `json:"temperature"`
+	Pressure    int    `json:"pressure"`
+}
+
+type WeatherDifference struct {
+	ID          string `json:"id"`
+	Temperature string `json:"temperature"`
+	Pressure    string `json:"pressure"`
 }

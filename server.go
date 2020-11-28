@@ -1,13 +1,13 @@
 package main
 
 import (
+	"github.com/ArtemGretsov/golang-exchanges-rates/graph/resolvers"
 	"log"
 	"net/http"
 	"os"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
-	"github.com/ArtemGretsov/golang-exchanges-rates/graph"
 	"github.com/ArtemGretsov/golang-exchanges-rates/graph/generated"
 )
 
@@ -19,7 +19,7 @@ func main() {
 		port = defaultPort
 	}
 
-	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}}))
+	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &resolvers.Resolver{}}))
 
 	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	http.Handle("/query", srv)

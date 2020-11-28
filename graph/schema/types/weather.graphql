@@ -1,0 +1,12 @@
+type WeatherDifference {
+    id: ID!
+    temperature: String!
+    pressure: String!
+}
+
+type Weather {
+    id: ID!
+    temperature: Int!
+    pressure: Int!
+}
+
