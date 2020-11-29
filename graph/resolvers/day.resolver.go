@@ -1,20 +1,20 @@
 package resolvers
 
 import (
-	"context"
-	"github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/graph/model"
+  "context"
+  "github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/graph/model"
 )
 
 func (d dayResolver) Weather(ctx context.Context, obj *model.Day) (*model.Weather, error) {
-	weather := &model.Weather{DayID: obj.ID}
-	d.DB.Where(weather).First(weather)
+  weather := &model.Weather{DayID: obj.ID}
+  d.DB.Where(weather).First(weather)
 
-	return weather, nil
+  return weather, nil
 }
 
 func (d dayResolver) Rate(ctx context.Context, obj *model.Day) (*model.Rate, error) {
-	rate := &model.Rate{DayID: obj.ID}
-	d.DB.Where(rate).First(rate)
+  rate := &model.Rate{DayID: obj.ID}
+  d.DB.Where(rate).First(rate)
 
-	return rate, nil
+  return rate, nil
 }

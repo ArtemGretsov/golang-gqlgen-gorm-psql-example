@@ -2,21 +2,21 @@
 package resolvers
 
 import (
-	"github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/graph/generated"
-	_ "github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/graph/model"
-	"gorm.io/gorm"
+  "github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/graph/generated"
+  _ "github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/graph/model"
+  "gorm.io/gorm"
 )
 
 type Resolver struct {
-	DB *gorm.DB
+  DB *gorm.DB
 }
 
 func (r *Resolver) Query() generated.QueryResolver {
-	return &queryResolver{r}
+  return &queryResolver{r}
 }
 
 func (r *Resolver) Day() generated.DayResolver {
-	return &dayResolver{r}
+  return &dayResolver{r}
 }
 
 type queryResolver struct{ *Resolver }
