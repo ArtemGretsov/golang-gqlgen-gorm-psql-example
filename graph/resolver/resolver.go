@@ -1,5 +1,5 @@
 //go:generate go run github.com/99designs/gqlgen --verbose
-package resolvers
+package resolver
 
 import (
   "github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/graph/generated"

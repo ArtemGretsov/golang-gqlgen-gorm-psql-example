@@ -4,7 +4,7 @@ import (
   "fmt"
   cronjob "github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/cron"
   "github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/graph/model"
-  "github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/graph/resolvers"
+  "github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/graph/resolver"
   "github.com/joho/godotenv"
   "gorm.io/driver/postgres"
   "gorm.io/gorm"
@@ -38,7 +38,7 @@ func main() {
   db := connectDatabase()
   cronjob.Start(db)
 
-  srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &resolvers.Resolver{DB: db}}))
+  srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &resolver.Resolver{DB: db}}))
 
   log.Printf("Server started! Port: " + port)
   http.Handle("/", playground.Handler("GraphQL playground", "/query"))

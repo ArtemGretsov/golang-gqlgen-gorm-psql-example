@@ -19,7 +19,7 @@ model:
 
 # Where should the resolver implementations go?
 resolver:
-  package: resolvers
+  package: resolver
   type: Resolver
   filename_template: "{name}.resolver.go"
 
