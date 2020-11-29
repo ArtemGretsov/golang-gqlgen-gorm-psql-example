@@ -7,6 +7,6 @@ type Weather struct {
 	ID          int
 	Temperature float64
 	Pressure    float64
-	DayID       uint
+	DayID       int
 	Difference  WeatherDifference
 }

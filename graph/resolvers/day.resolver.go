@@ -6,13 +6,15 @@ import (
 )
 
 func (d dayResolver) Weather(ctx context.Context, obj *model.Day) (*model.Weather, error) {
-	var weather *model.Weather
-	d.DB.Find(weather, obj.ID)
+	weather := &model.Weather{DayID: obj.ID}
+	d.DB.Where(weather).First(weather)
 
 	return weather, nil
 }
 
 func (d dayResolver) Rate(ctx context.Context, obj *model.Day) (*model.Rate, error) {
+	rate := &model.Rate{DayID: obj.ID}
+	d.DB.Where(rate).First(rate)
 
-	return nil, nil
+	return rate, nil
 }

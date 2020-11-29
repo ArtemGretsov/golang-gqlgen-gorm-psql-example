@@ -7,5 +7,5 @@ type WeatherDifference struct {
 	ID int
 	Temperature string
 	Pressure string
-	WeatherID uint
+	WeatherID int
 }

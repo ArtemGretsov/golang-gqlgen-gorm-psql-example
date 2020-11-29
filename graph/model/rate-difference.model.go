@@ -7,5 +7,5 @@ type RateDifference struct {
 	ID  int
 	Usd string
 	Eur string
-	RateID uint
+	RateID int
 }
