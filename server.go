@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	cronjob "github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/cron"
 	"github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/graph/model"
 	"github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/graph/resolvers"
 	"github.com/joho/godotenv"
@@ -21,6 +22,7 @@ import (
 
 const defaultPort = "8080"
 
+
 func main() {
 	err := godotenv.Load()
 	if err != nil {
@@ -34,6 +36,7 @@ func main() {
 	}
 
 	db := connectDatabase()
+	cronjob.Start(db)
 
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &resolvers.Resolver{DB: db}}))
 

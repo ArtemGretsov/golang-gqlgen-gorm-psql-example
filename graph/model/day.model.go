@@ -8,5 +8,5 @@ type Day struct {
 	Date       string
 	IsFullInfo bool
 	Rate       Rate
-	Weather    []Weather
+	Weather    Weather
 }

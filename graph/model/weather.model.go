@@ -5,8 +5,8 @@ import "gorm.io/gorm"
 type Weather struct {
 	gorm.Model
 	ID          int
-	Temperature int
-	Pressure    int
+	Temperature float64
+	Pressure    float64
 	DayID       uint
 	Difference  WeatherDifference
 }

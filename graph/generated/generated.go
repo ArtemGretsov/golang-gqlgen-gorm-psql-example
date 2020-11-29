@@ -363,8 +363,8 @@ type Rate @goModel(model: "github.com/ArtemGretsov/golang-gqlgen-gorm-psql-examp
 
 type Weather @goModel(model: "github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/graph/model.Weather") {
     id: ID!
-    temperature: Int!
-    pressure: Int!
+    temperature: Float!
+    pressure: Float!
     difference: WeatherDifference!
 }`, BuiltIn: false},
 }
@@ -564,7 +564,7 @@ func (ec *executionContext) _Day_weather(ctx context.Context, field graphql.Coll
 	}
 	res := resTmp.(*model.Weather)
 	fc.Result = res
-	return ec.marshalNWeather2ᚖgithubᚗcomᚋArtemGretsovᚋgolangᚑexchangesᚑratesᚋgraphᚋmodelᚐWeather(ctx, field.Selections, res)
+	return ec.marshalNWeather2ᚖgithubᚗcomᚋArtemGretsovᚋgolangᚑgqlgenᚑgormᚑpsqlᚑexampleᚋgraphᚋmodelᚐWeather(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Day_rate(ctx context.Context, field graphql.CollectedField, obj *model.Day) (ret graphql.Marshaler) {
@@ -599,7 +599,7 @@ func (ec *executionContext) _Day_rate(ctx context.Context, field graphql.Collect
 	}
 	res := resTmp.(*model.Rate)
 	fc.Result = res
-	return ec.marshalNRate2ᚖgithubᚗcomᚋArtemGretsovᚋgolangᚑexchangesᚑratesᚋgraphᚋmodelᚐRate(ctx, field.Selections, res)
+	return ec.marshalNRate2ᚖgithubᚗcomᚋArtemGretsovᚋgolangᚑgqlgenᚑgormᚑpsqlᚑexampleᚋgraphᚋmodelᚐRate(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_days(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -634,7 +634,7 @@ func (ec *executionContext) _Query_days(ctx context.Context, field graphql.Colle
 	}
 	res := resTmp.([]*model.Day)
 	fc.Result = res
-	return ec.marshalNDay2ᚕᚖgithubᚗcomᚋArtemGretsovᚋgolangᚑexchangesᚑratesᚋgraphᚋmodelᚐDayᚄ(ctx, field.Selections, res)
+	return ec.marshalNDay2ᚕᚖgithubᚗcomᚋArtemGretsovᚋgolangᚑgqlgenᚑgormᚑpsqlᚑexampleᚋgraphᚋmodelᚐDayᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -845,7 +845,7 @@ func (ec *executionContext) _Rate_difference(ctx context.Context, field graphql.
 	}
 	res := resTmp.(model.RateDifference)
 	fc.Result = res
-	return ec.marshalNRateDifference2githubᚗcomᚋArtemGretsovᚋgolangᚑexchangesᚑratesᚋgraphᚋmodelᚐRateDifference(ctx, field.Selections, res)
+	return ec.marshalNRateDifference2githubᚗcomᚋArtemGretsovᚋgolangᚑgqlgenᚑgormᚑpsqlᚑexampleᚋgraphᚋmodelᚐRateDifference(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _RateDifference_id(ctx context.Context, field graphql.CollectedField, obj *model.RateDifference) (ret graphql.Marshaler) {
@@ -1088,9 +1088,9 @@ func (ec *executionContext) _Weather_temperature(ctx context.Context, field grap
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(float64)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Weather_pressure(ctx context.Context, field graphql.CollectedField, obj *model.Weather) (ret graphql.Marshaler) {
@@ -1123,9 +1123,9 @@ func (ec *executionContext) _Weather_pressure(ctx context.Context, field graphql
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(float64)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Weather_difference(ctx context.Context, field graphql.CollectedField, obj *model.Weather) (ret graphql.Marshaler) {
@@ -1160,7 +1160,7 @@ func (ec *executionContext) _Weather_difference(ctx context.Context, field graph
 	}
 	res := resTmp.(model.WeatherDifference)
 	fc.Result = res
-	return ec.marshalNWeatherDifference2githubᚗcomᚋArtemGretsovᚋgolangᚑexchangesᚑratesᚋgraphᚋmodelᚐWeatherDifference(ctx, field.Selections, res)
+	return ec.marshalNWeatherDifference2githubᚗcomᚋArtemGretsovᚋgolangᚑgqlgenᚑgormᚑpsqlᚑexampleᚋgraphᚋmodelᚐWeatherDifference(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _WeatherDifference_id(ctx context.Context, field graphql.CollectedField, obj *model.WeatherDifference) (ret graphql.Marshaler) {
@@ -2937,7 +2937,7 @@ func (ec *executionContext) marshalNDate2string(ctx context.Context, sel ast.Sel
 	return res
 }
 
-func (ec *executionContext) marshalNDay2ᚕᚖgithubᚗcomᚋArtemGretsovᚋgolangᚑexchangesᚑratesᚋgraphᚋmodelᚐDayᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Day) graphql.Marshaler {
+func (ec *executionContext) marshalNDay2ᚕᚖgithubᚗcomᚋArtemGretsovᚋgolangᚑgqlgenᚑgormᚑpsqlᚑexampleᚋgraphᚋmodelᚐDayᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Day) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -2961,7 +2961,7 @@ func (ec *executionContext) marshalNDay2ᚕᚖgithubᚗcomᚋArtemGretsovᚋgola
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNDay2ᚖgithubᚗcomᚋArtemGretsovᚋgolangᚑexchangesᚑratesᚋgraphᚋmodelᚐDay(ctx, sel, v[i])
+			ret[i] = ec.marshalNDay2ᚖgithubᚗcomᚋArtemGretsovᚋgolangᚑgqlgenᚑgormᚑpsqlᚑexampleᚋgraphᚋmodelᚐDay(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -2974,7 +2974,7 @@ func (ec *executionContext) marshalNDay2ᚕᚖgithubᚗcomᚋArtemGretsovᚋgola
 	return ret
 }
 
-func (ec *executionContext) marshalNDay2ᚖgithubᚗcomᚋArtemGretsovᚋgolangᚑexchangesᚑratesᚋgraphᚋmodelᚐDay(ctx context.Context, sel ast.SelectionSet, v *model.Day) graphql.Marshaler {
+func (ec *executionContext) marshalNDay2ᚖgithubᚗcomᚋArtemGretsovᚋgolangᚑgqlgenᚑgormᚑpsqlᚑexampleᚋgraphᚋmodelᚐDay(ctx context.Context, sel ast.SelectionSet, v *model.Day) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -3029,26 +3029,11 @@ func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.Selec
 	return res
 }
 
-func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {
-	res, err := graphql.UnmarshalInt(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
-	res := graphql.MarshalInt(v)
-	if res == graphql.Null {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-	}
-	return res
-}
-
-func (ec *executionContext) marshalNRate2githubᚗcomᚋArtemGretsovᚋgolangᚑexchangesᚑratesᚋgraphᚋmodelᚐRate(ctx context.Context, sel ast.SelectionSet, v model.Rate) graphql.Marshaler {
+func (ec *executionContext) marshalNRate2githubᚗcomᚋArtemGretsovᚋgolangᚑgqlgenᚑgormᚑpsqlᚑexampleᚋgraphᚋmodelᚐRate(ctx context.Context, sel ast.SelectionSet, v model.Rate) graphql.Marshaler {
 	return ec._Rate(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNRate2ᚖgithubᚗcomᚋArtemGretsovᚋgolangᚑexchangesᚑratesᚋgraphᚋmodelᚐRate(ctx context.Context, sel ast.SelectionSet, v *model.Rate) graphql.Marshaler {
+func (ec *executionContext) marshalNRate2ᚖgithubᚗcomᚋArtemGretsovᚋgolangᚑgqlgenᚑgormᚑpsqlᚑexampleᚋgraphᚋmodelᚐRate(ctx context.Context, sel ast.SelectionSet, v *model.Rate) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -3058,7 +3043,7 @@ func (ec *executionContext) marshalNRate2ᚖgithubᚗcomᚋArtemGretsovᚋgolang
 	return ec._Rate(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNRateDifference2githubᚗcomᚋArtemGretsovᚋgolangᚑexchangesᚑratesᚋgraphᚋmodelᚐRateDifference(ctx context.Context, sel ast.SelectionSet, v model.RateDifference) graphql.Marshaler {
+func (ec *executionContext) marshalNRateDifference2githubᚗcomᚋArtemGretsovᚋgolangᚑgqlgenᚑgormᚑpsqlᚑexampleᚋgraphᚋmodelᚐRateDifference(ctx context.Context, sel ast.SelectionSet, v model.RateDifference) graphql.Marshaler {
 	return ec._RateDifference(ctx, sel, &v)
 }
 
@@ -3077,11 +3062,11 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 	return res
 }
 
-func (ec *executionContext) marshalNWeather2githubᚗcomᚋArtemGretsovᚋgolangᚑexchangesᚑratesᚋgraphᚋmodelᚐWeather(ctx context.Context, sel ast.SelectionSet, v model.Weather) graphql.Marshaler {
+func (ec *executionContext) marshalNWeather2githubᚗcomᚋArtemGretsovᚋgolangᚑgqlgenᚑgormᚑpsqlᚑexampleᚋgraphᚋmodelᚐWeather(ctx context.Context, sel ast.SelectionSet, v model.Weather) graphql.Marshaler {
 	return ec._Weather(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNWeather2ᚖgithubᚗcomᚋArtemGretsovᚋgolangᚑexchangesᚑratesᚋgraphᚋmodelᚐWeather(ctx context.Context, sel ast.SelectionSet, v *model.Weather) graphql.Marshaler {
+func (ec *executionContext) marshalNWeather2ᚖgithubᚗcomᚋArtemGretsovᚋgolangᚑgqlgenᚑgormᚑpsqlᚑexampleᚋgraphᚋmodelᚐWeather(ctx context.Context, sel ast.SelectionSet, v *model.Weather) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -3091,7 +3076,7 @@ func (ec *executionContext) marshalNWeather2ᚖgithubᚗcomᚋArtemGretsovᚋgol
 	return ec._Weather(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNWeatherDifference2githubᚗcomᚋArtemGretsovᚋgolangᚑexchangesᚑratesᚋgraphᚋmodelᚐWeatherDifference(ctx context.Context, sel ast.SelectionSet, v model.WeatherDifference) graphql.Marshaler {
+func (ec *executionContext) marshalNWeatherDifference2githubᚗcomᚋArtemGretsovᚋgolangᚑgqlgenᚑgormᚑpsqlᚑexampleᚋgraphᚋmodelᚐWeatherDifference(ctx context.Context, sel ast.SelectionSet, v model.WeatherDifference) graphql.Marshaler {
 	return ec._WeatherDifference(ctx, sel, &v)
 }
 

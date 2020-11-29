@@ -6,7 +6,7 @@ type WeatherDifference @goModel(model: "github.com/ArtemGretsov/golang-gqlgen-go
 
 type Weather @goModel(model: "github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/graph/model.Weather") {
     id: ID!
-    temperature: Int!
-    pressure: Int!
+    temperature: Float!
+    pressure: Float!
     difference: WeatherDifference!
 }
