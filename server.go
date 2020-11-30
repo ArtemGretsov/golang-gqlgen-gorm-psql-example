@@ -63,6 +63,7 @@ func connectDatabase() *gorm.DB {
     &model.Day{},
     &model.Weather{},
     &model.Rate{},
+    &model.Tag{},
   )
 
   if mErr != nil {

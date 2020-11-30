@@ -1,0 +1,8 @@
+input DayTag {
+  text: String!
+  dayId: Int!
+}
+
+type Mutation {
+  createTag(input: DayTag!): Tag!
+}

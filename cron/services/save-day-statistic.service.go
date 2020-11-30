@@ -4,6 +4,7 @@ import (
   "errors"
   "github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/graph/model"
   "gorm.io/gorm"
+  "log"
   "time"
 )
 
@@ -12,18 +13,18 @@ func SaveDayStatistic(db *gorm.DB) error  {
   temp, pressure, errWeather := GetWeather()
   usd, eur, errRate  := GetRates()
 
-  existDay := model.Day{ Date: date }
-  db.First(&existDay)
-
-  if existDay.ID != 0 {
+  existDay := model.Day{ Date: date}
+  if db.Find(&existDay, existDay); existDay.ID != 0 {
     return errors.New("Day exist!")
   }
 
   if errWeather != nil {
+    log.Printf("Error: error getting weather")
     return errWeather
   }
 
   if errRate != nil {
+    log.Printf("Error: error getting rate")
     return errRate
   }
 
@@ -39,7 +40,9 @@ func SaveDayStatistic(db *gorm.DB) error  {
     },
   }
 
-  db.Create(&day)
+  if err := db.Create(&day).Error; err != nil {
+    return err
+  }
 
   return nil
 }

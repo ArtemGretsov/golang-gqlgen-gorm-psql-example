@@ -9,4 +9,5 @@ type Day struct {
   IsFullInfo bool
   Rate       Rate
   Weather    Weather
+  Tag []Tag `gorm:"many2many:day_tags;"`
 }

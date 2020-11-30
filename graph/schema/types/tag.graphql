@@ -1,0 +1,4 @@
+type Tag @goModel(model: "github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/graph/model.Tag") {
+   id: ID!
+   text: String!
+}

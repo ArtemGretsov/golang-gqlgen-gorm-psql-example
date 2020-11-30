@@ -2,6 +2,11 @@
 
 package generated
 
+type DayTag struct {
+	Text  string `json:"text"`
+	DayID int    `json:"dayId"`
+}
+
 type RateDifference struct {
 	Usd string `json:"USD"`
 	Eur string `json:"EUR"`
