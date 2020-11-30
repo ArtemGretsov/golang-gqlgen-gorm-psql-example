@@ -385,7 +385,7 @@ type Day @goModel(model: "github.com/ArtemGretsov/golang-gqlgen-gorm-psql-exampl
    isFullInfo: Boolean!
    weather: Weather! @goField(forceResolver: true)
    rate: Rate! @goField(forceResolver: true)
-   tags: [Tag!]! @goField(forceResolver: true)
+   tags: [Tag]! @goField(forceResolver: true)
 }`, BuiltIn: false},
 	{Name: "graph/schema/types/rate.graphql", Input: `type RateDifference {
     USD: String!
@@ -710,7 +710,7 @@ func (ec *executionContext) _Day_tags(ctx context.Context, field graphql.Collect
 	}
 	res := resTmp.([]*model.Tag)
 	fc.Result = res
-	return ec.marshalNTag2ᚕᚖgithubᚗcomᚋArtemGretsovᚋgolangᚑgqlgenᚑgormᚑpsqlᚑexampleᚋgraphᚋmodelᚐTagᚄ(ctx, field.Selections, res)
+	return ec.marshalNTag2ᚕᚖgithubᚗcomᚋArtemGretsovᚋgolangᚑgqlgenᚑgormᚑpsqlᚑexampleᚋgraphᚋmodelᚐTag(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_createTag(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3252,7 +3252,7 @@ func (ec *executionContext) marshalNTag2githubᚗcomᚋArtemGretsovᚋgolangᚑg
 	return ec._Tag(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNTag2ᚕᚖgithubᚗcomᚋArtemGretsovᚋgolangᚑgqlgenᚑgormᚑpsqlᚑexampleᚋgraphᚋmodelᚐTagᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Tag) graphql.Marshaler {
+func (ec *executionContext) marshalNTag2ᚕᚖgithubᚗcomᚋArtemGretsovᚋgolangᚑgqlgenᚑgormᚑpsqlᚑexampleᚋgraphᚋmodelᚐTag(ctx context.Context, sel ast.SelectionSet, v []*model.Tag) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -3276,7 +3276,7 @@ func (ec *executionContext) marshalNTag2ᚕᚖgithubᚗcomᚋArtemGretsovᚋgola
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNTag2ᚖgithubᚗcomᚋArtemGretsovᚋgolangᚑgqlgenᚑgormᚑpsqlᚑexampleᚋgraphᚋmodelᚐTag(ctx, sel, v[i])
+			ret[i] = ec.marshalOTag2ᚖgithubᚗcomᚋArtemGretsovᚋgolangᚑgqlgenᚑgormᚑpsqlᚑexampleᚋgraphᚋmodelᚐTag(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -3638,6 +3638,13 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 		return graphql.Null
 	}
 	return graphql.MarshalString(*v)
+}
+
+func (ec *executionContext) marshalOTag2ᚖgithubᚗcomᚋArtemGretsovᚋgolangᚑgqlgenᚑgormᚑpsqlᚑexampleᚋgraphᚋmodelᚐTag(ctx context.Context, sel ast.SelectionSet, v *model.Tag) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Tag(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.EnumValue) graphql.Marshaler {
