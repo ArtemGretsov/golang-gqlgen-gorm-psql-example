@@ -41,8 +41,8 @@ func main() {
   srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &resolver.Resolver{DB: db}}))
 
   log.Printf("Server started! Port: " + port)
-  http.Handle("/", playground.Handler("GraphQL playground", "/query"))
-  http.Handle("/query", srv)
+  http.Handle("/", playground.Handler("GraphQL playground", "/querys"))
+  http.Handle("/querys", srv)
   log.Fatal(http.ListenAndServe(":"+port, nil))
 }
 
@@ -62,9 +62,7 @@ func connectDatabase() *gorm.DB {
   mErr := db.AutoMigrate(
     &model.Day{},
     &model.Weather{},
-    &model.WeatherDifference{},
     &model.Rate{},
-    &model.RateDifference{},
   )
 
   if mErr != nil {

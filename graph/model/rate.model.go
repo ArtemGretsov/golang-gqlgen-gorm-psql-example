@@ -8,5 +8,4 @@ type Rate struct {
   Usd        float64
   Eur        float64
   DayID      int
-  Difference RateDifference
 }

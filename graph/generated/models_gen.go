@@ -2,7 +2,12 @@
 
 package generated
 
-type User struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+type RateDifference struct {
+	Usd string `json:"USD"`
+	Eur string `json:"EUR"`
+}
+
+type WeatherDifference struct {
+	Temperature string `json:"temperature"`
+	Pressure    string `json:"pressure"`
 }

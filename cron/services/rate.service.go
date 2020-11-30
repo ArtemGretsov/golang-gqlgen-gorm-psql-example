@@ -13,14 +13,22 @@ type RateResponse struct {
   }
 }
 
-func GetRates() (float64, float64) {
+func GetRates() (float64, float64, error) {
   urlUsd := fmt.Sprintf(rateUrl + "?base=%s&symbols=RUB", "USD")
   rateUsd := RateResponse{}
-  reqjson.Get(urlUsd, &rateUsd)
+  errUsd := reqjson.Get(urlUsd, &rateUsd)
+
+  if errUsd != nil {
+    return 0, 0, errUsd
+  }
 
   urlEur := fmt.Sprintf(rateUrl + "?base=%s&symbols=RUB", "EUR")
   rateEur := RateResponse{}
-  reqjson.Get(urlEur, &rateEur)
+  errEur := reqjson.Get(urlEur, &rateEur)
 
-  return rateUsd.Rates.RUB, rateEur.Rates.RUB
+  if errEur != nil {
+    return 0, 0, errEur
+  }
+
+  return rateUsd.Rates.RUB, rateEur.Rates.RUB, nil
 }

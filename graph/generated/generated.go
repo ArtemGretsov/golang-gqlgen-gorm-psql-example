@@ -37,6 +37,8 @@ type Config struct {
 type ResolverRoot interface {
 	Day() DayResolver
 	Query() QueryResolver
+	Rate() RateResolver
+	Weather() WeatherResolver
 }
 
 type DirectiveRoot struct {
@@ -64,13 +66,7 @@ type ComplexityRoot struct {
 
 	RateDifference struct {
 		Eur func(childComplexity int) int
-		ID  func(childComplexity int) int
 		Usd func(childComplexity int) int
-	}
-
-	User struct {
-		ID   func(childComplexity int) int
-		Name func(childComplexity int) int
 	}
 
 	Weather struct {
@@ -81,7 +77,6 @@ type ComplexityRoot struct {
 	}
 
 	WeatherDifference struct {
-		ID          func(childComplexity int) int
 		Pressure    func(childComplexity int) int
 		Temperature func(childComplexity int) int
 	}
@@ -93,6 +88,12 @@ type DayResolver interface {
 }
 type QueryResolver interface {
 	Days(ctx context.Context) ([]*model.Day, error)
+}
+type RateResolver interface {
+	Difference(ctx context.Context, obj *model.Rate) (*RateDifference, error)
+}
+type WeatherResolver interface {
+	Difference(ctx context.Context, obj *model.Weather) (*WeatherDifference, error)
 }
 
 type executableSchema struct {
@@ -187,33 +188,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.RateDifference.Eur(childComplexity), true
 
-	case "RateDifference.id":
-		if e.complexity.RateDifference.ID == nil {
-			break
-		}
-
-		return e.complexity.RateDifference.ID(childComplexity), true
-
 	case "RateDifference.USD":
 		if e.complexity.RateDifference.Usd == nil {
 			break
 		}
 
 		return e.complexity.RateDifference.Usd(childComplexity), true
-
-	case "User.id":
-		if e.complexity.User.ID == nil {
-			break
-		}
-
-		return e.complexity.User.ID(childComplexity), true
-
-	case "User.name":
-		if e.complexity.User.Name == nil {
-			break
-		}
-
-		return e.complexity.User.Name(childComplexity), true
 
 	case "Weather.difference":
 		if e.complexity.Weather.Difference == nil {
@@ -242,13 +222,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Weather.Temperature(childComplexity), true
-
-	case "WeatherDifference.id":
-		if e.complexity.WeatherDifference.ID == nil {
-			break
-		}
-
-		return e.complexity.WeatherDifference.ID(childComplexity), true
 
 	case "WeatherDifference.pressure":
 		if e.complexity.WeatherDifference.Pressure == nil {
@@ -326,7 +299,7 @@ directive @goModel(model: String, models: [String!]) on OBJECT
 
 directive @goField(forceResolver: Boolean, name: String) on INPUT_FIELD_DEFINITION
     | FIELD_DEFINITION`, BuiltIn: false},
-	{Name: "graph/schema/query/query.graphql", Input: `type Query {
+	{Name: "graph/schema/querys/query.graphql", Input: `type Query {
   days: [Day!]!
 }`, BuiltIn: false},
 	{Name: "graph/schema/types/day.graphql", Input: `scalar Date
@@ -338,9 +311,7 @@ type Day @goModel(model: "github.com/ArtemGretsov/golang-gqlgen-gorm-psql-exampl
    weather: Weather! @goField(forceResolver: true)
    rate: Rate! @goField(forceResolver: true)
 }`, BuiltIn: false},
-	{Name: "graph/schema/types/popular-query-google.graphql", Input: ``, BuiltIn: false},
-	{Name: "graph/schema/types/rates.graphql", Input: `type RateDifference @goModel(model: "github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/graph/model.RateDifference")  {
-    id: ID!
+	{Name: "graph/schema/types/rate.graphql", Input: `type RateDifference {
     USD: String!
     EUR: String!
 }
@@ -351,12 +322,7 @@ type Rate @goModel(model: "github.com/ArtemGretsov/golang-gqlgen-gorm-psql-examp
     EUR: Float!
     difference: RateDifference!
 }`, BuiltIn: false},
-	{Name: "graph/schema/types/user.graphql", Input: `type User {
-  id: ID!
-  name: String!
-}`, BuiltIn: false},
-	{Name: "graph/schema/types/weather.graphql", Input: `type WeatherDifference @goModel(model: "github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/graph/model.WeatherDifference") {
-    id: ID!
+	{Name: "graph/schema/types/weather.graphql", Input: `type WeatherDifference {
     temperature: String!
     pressure: String!
 }
@@ -824,14 +790,14 @@ func (ec *executionContext) _Rate_difference(ctx context.Context, field graphql.
 		Object:     "Rate",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Difference, nil
+		return ec.resolvers.Rate().Difference(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -843,47 +809,12 @@ func (ec *executionContext) _Rate_difference(ctx context.Context, field graphql.
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.RateDifference)
+	res := resTmp.(*RateDifference)
 	fc.Result = res
-	return ec.marshalNRateDifference2githubᚗcomᚋArtemGretsovᚋgolangᚑgqlgenᚑgormᚑpsqlᚑexampleᚋgraphᚋmodelᚐRateDifference(ctx, field.Selections, res)
+	return ec.marshalNRateDifference2ᚖgithubᚗcomᚋArtemGretsovᚋgolangᚑgqlgenᚑgormᚑpsqlᚑexampleᚋgraphᚋgeneratedᚐRateDifference(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _RateDifference_id(ctx context.Context, field graphql.CollectedField, obj *model.RateDifference) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "RateDifference",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNID2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _RateDifference_USD(ctx context.Context, field graphql.CollectedField, obj *model.RateDifference) (ret graphql.Marshaler) {
+func (ec *executionContext) _RateDifference_USD(ctx context.Context, field graphql.CollectedField, obj *RateDifference) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -918,7 +849,7 @@ func (ec *executionContext) _RateDifference_USD(ctx context.Context, field graph
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _RateDifference_EUR(ctx context.Context, field graphql.CollectedField, obj *model.RateDifference) (ret graphql.Marshaler) {
+func (ec *executionContext) _RateDifference_EUR(ctx context.Context, field graphql.CollectedField, obj *RateDifference) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -937,76 +868,6 @@ func (ec *executionContext) _RateDifference_EUR(ctx context.Context, field graph
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Eur, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _User_id(ctx context.Context, field graphql.CollectedField, obj *User) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "User",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _User_name(ctx context.Context, field graphql.CollectedField, obj *User) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "User",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Name, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1139,14 +1000,14 @@ func (ec *executionContext) _Weather_difference(ctx context.Context, field graph
 		Object:     "Weather",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Difference, nil
+		return ec.resolvers.Weather().Difference(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1158,47 +1019,12 @@ func (ec *executionContext) _Weather_difference(ctx context.Context, field graph
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.WeatherDifference)
+	res := resTmp.(*WeatherDifference)
 	fc.Result = res
-	return ec.marshalNWeatherDifference2githubᚗcomᚋArtemGretsovᚋgolangᚑgqlgenᚑgormᚑpsqlᚑexampleᚋgraphᚋmodelᚐWeatherDifference(ctx, field.Selections, res)
+	return ec.marshalNWeatherDifference2ᚖgithubᚗcomᚋArtemGretsovᚋgolangᚑgqlgenᚑgormᚑpsqlᚑexampleᚋgraphᚋgeneratedᚐWeatherDifference(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _WeatherDifference_id(ctx context.Context, field graphql.CollectedField, obj *model.WeatherDifference) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "WeatherDifference",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNID2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _WeatherDifference_temperature(ctx context.Context, field graphql.CollectedField, obj *model.WeatherDifference) (ret graphql.Marshaler) {
+func (ec *executionContext) _WeatherDifference_temperature(ctx context.Context, field graphql.CollectedField, obj *WeatherDifference) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1233,7 +1059,7 @@ func (ec *executionContext) _WeatherDifference_temperature(ctx context.Context, 
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _WeatherDifference_pressure(ctx context.Context, field graphql.CollectedField, obj *model.WeatherDifference) (ret graphql.Marshaler) {
+func (ec *executionContext) _WeatherDifference_pressure(ctx context.Context, field graphql.CollectedField, obj *WeatherDifference) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -2486,23 +2312,32 @@ func (ec *executionContext) _Rate(ctx context.Context, sel ast.SelectionSet, obj
 		case "id":
 			out.Values[i] = ec._Rate_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "USD":
 			out.Values[i] = ec._Rate_USD(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "EUR":
 			out.Values[i] = ec._Rate_EUR(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "difference":
-			out.Values[i] = ec._Rate_difference(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Rate_difference(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -2516,7 +2351,7 @@ func (ec *executionContext) _Rate(ctx context.Context, sel ast.SelectionSet, obj
 
 var rateDifferenceImplementors = []string{"RateDifference"}
 
-func (ec *executionContext) _RateDifference(ctx context.Context, sel ast.SelectionSet, obj *model.RateDifference) graphql.Marshaler {
+func (ec *executionContext) _RateDifference(ctx context.Context, sel ast.SelectionSet, obj *RateDifference) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, rateDifferenceImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -2525,11 +2360,6 @@ func (ec *executionContext) _RateDifference(ctx context.Context, sel ast.Selecti
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("RateDifference")
-		case "id":
-			out.Values[i] = ec._RateDifference_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "USD":
 			out.Values[i] = ec._RateDifference_USD(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -2537,38 +2367,6 @@ func (ec *executionContext) _RateDifference(ctx context.Context, sel ast.Selecti
 			}
 		case "EUR":
 			out.Values[i] = ec._RateDifference_EUR(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
-var userImplementors = []string{"User"}
-
-func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj *User) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, userImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("User")
-		case "id":
-			out.Values[i] = ec._User_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "name":
-			out.Values[i] = ec._User_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -2597,23 +2395,32 @@ func (ec *executionContext) _Weather(ctx context.Context, sel ast.SelectionSet, 
 		case "id":
 			out.Values[i] = ec._Weather_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "temperature":
 			out.Values[i] = ec._Weather_temperature(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "pressure":
 			out.Values[i] = ec._Weather_pressure(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "difference":
-			out.Values[i] = ec._Weather_difference(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Weather_difference(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -2627,7 +2434,7 @@ func (ec *executionContext) _Weather(ctx context.Context, sel ast.SelectionSet, 
 
 var weatherDifferenceImplementors = []string{"WeatherDifference"}
 
-func (ec *executionContext) _WeatherDifference(ctx context.Context, sel ast.SelectionSet, obj *model.WeatherDifference) graphql.Marshaler {
+func (ec *executionContext) _WeatherDifference(ctx context.Context, sel ast.SelectionSet, obj *WeatherDifference) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, weatherDifferenceImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -2636,11 +2443,6 @@ func (ec *executionContext) _WeatherDifference(ctx context.Context, sel ast.Sele
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("WeatherDifference")
-		case "id":
-			out.Values[i] = ec._WeatherDifference_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "temperature":
 			out.Values[i] = ec._WeatherDifference_temperature(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -3014,21 +2816,6 @@ func (ec *executionContext) marshalNID2int(ctx context.Context, sel ast.Selectio
 	return res
 }
 
-func (ec *executionContext) unmarshalNID2string(ctx context.Context, v interface{}) (string, error) {
-	res, err := graphql.UnmarshalID(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
-	res := graphql.MarshalID(v)
-	if res == graphql.Null {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-	}
-	return res
-}
-
 func (ec *executionContext) marshalNRate2githubᚗcomᚋArtemGretsovᚋgolangᚑgqlgenᚑgormᚑpsqlᚑexampleᚋgraphᚋmodelᚐRate(ctx context.Context, sel ast.SelectionSet, v model.Rate) graphql.Marshaler {
 	return ec._Rate(ctx, sel, &v)
 }
@@ -3043,8 +2830,18 @@ func (ec *executionContext) marshalNRate2ᚖgithubᚗcomᚋArtemGretsovᚋgolang
 	return ec._Rate(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNRateDifference2githubᚗcomᚋArtemGretsovᚋgolangᚑgqlgenᚑgormᚑpsqlᚑexampleᚋgraphᚋmodelᚐRateDifference(ctx context.Context, sel ast.SelectionSet, v model.RateDifference) graphql.Marshaler {
+func (ec *executionContext) marshalNRateDifference2githubᚗcomᚋArtemGretsovᚋgolangᚑgqlgenᚑgormᚑpsqlᚑexampleᚋgraphᚋgeneratedᚐRateDifference(ctx context.Context, sel ast.SelectionSet, v RateDifference) graphql.Marshaler {
 	return ec._RateDifference(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNRateDifference2ᚖgithubᚗcomᚋArtemGretsovᚋgolangᚑgqlgenᚑgormᚑpsqlᚑexampleᚋgraphᚋgeneratedᚐRateDifference(ctx context.Context, sel ast.SelectionSet, v *RateDifference) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._RateDifference(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
@@ -3076,8 +2873,18 @@ func (ec *executionContext) marshalNWeather2ᚖgithubᚗcomᚋArtemGretsovᚋgol
 	return ec._Weather(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNWeatherDifference2githubᚗcomᚋArtemGretsovᚋgolangᚑgqlgenᚑgormᚑpsqlᚑexampleᚋgraphᚋmodelᚐWeatherDifference(ctx context.Context, sel ast.SelectionSet, v model.WeatherDifference) graphql.Marshaler {
+func (ec *executionContext) marshalNWeatherDifference2githubᚗcomᚋArtemGretsovᚋgolangᚑgqlgenᚑgormᚑpsqlᚑexampleᚋgraphᚋgeneratedᚐWeatherDifference(ctx context.Context, sel ast.SelectionSet, v WeatherDifference) graphql.Marshaler {
 	return ec._WeatherDifference(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNWeatherDifference2ᚖgithubᚗcomᚋArtemGretsovᚋgolangᚑgqlgenᚑgormᚑpsqlᚑexampleᚋgraphᚋgeneratedᚐWeatherDifference(ctx context.Context, sel ast.SelectionSet, v *WeatherDifference) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._WeatherDifference(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {

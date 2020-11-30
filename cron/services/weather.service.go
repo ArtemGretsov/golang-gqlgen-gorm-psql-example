@@ -15,11 +15,15 @@ type WeatherResponse struct {
   }
 }
 
-func GetWeather() (float64, float64) {
+func GetWeather() (float64, float64, error) {
   apiKey := os.Getenv("WEATHER_API_KEY")
   weatherApiKeyUrl := fmt.Sprintf(weatherUrl + "&appid=%s", apiKey)
   weatherResponse := WeatherResponse{}
-  reqjson.Get(weatherApiKeyUrl, &weatherResponse)
+  err := reqjson.Get(weatherApiKeyUrl, &weatherResponse)
 
-  return weatherResponse.Main.Temp, weatherResponse.Main.Pressure
+  if err != nil {
+    return 0, 0, err
+  }
+
+  return weatherResponse.Main.Temp, weatherResponse.Main.Pressure, nil
 }

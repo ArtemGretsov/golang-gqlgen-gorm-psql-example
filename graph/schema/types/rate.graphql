@@ -1,5 +1,4 @@
-type RateDifference @goModel(model: "github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/graph/model.RateDifference")  {
-    id: ID!
+type RateDifference {
     USD: String!
     EUR: String!
 }

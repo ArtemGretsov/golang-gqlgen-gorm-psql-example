@@ -1,5 +1,4 @@
-type WeatherDifference @goModel(model: "github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/graph/model.WeatherDifference") {
-    id: ID!
+type WeatherDifference {
     temperature: String!
     pressure: String!
 }

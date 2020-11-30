@@ -2,6 +2,7 @@ package resolver
 
 import (
   "context"
+  "github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/graph/generated"
   "github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/graph/model"
 )
 
@@ -18,3 +19,9 @@ func (d dayResolver) Rate(ctx context.Context, obj *model.Day) (*model.Rate, err
 
   return rate, nil
 }
+
+func (r *Resolver) Day() generated.DayResolver {
+  return &dayResolver{r}
+}
+
+type dayResolver struct{ *Resolver }

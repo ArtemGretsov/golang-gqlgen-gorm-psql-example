@@ -8,5 +8,4 @@ type Weather struct {
   Temperature float64
   Pressure    float64
   DayID       int
-  Difference  WeatherDifference
 }
