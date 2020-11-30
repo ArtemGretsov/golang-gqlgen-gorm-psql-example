@@ -24,3 +24,18 @@ func (r *Resolver) Day() generated.DayResolver {
 }
 
 type dayResolver struct{ *Resolver }
+
+func (d dayResolver) Tags(ctx context.Context, obj *model.Day) ([]*model.Tag, error) {
+  var tags []*model.Tag
+
+  d.DB.
+    Model(&model.Day{}).
+    Select("tags.text, tags.id").
+    Joins("left join day_tags on days.id = day_tags.day_id").
+    Joins("left join tags on day_tags.tag_id = tags.id").
+    Where("days.id = ?", obj.ID).
+    Scan(&tags)
+
+  return tags, nil
+}
+

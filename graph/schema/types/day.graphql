@@ -6,4 +6,5 @@ type Day @goModel(model: "github.com/ArtemGretsov/golang-gqlgen-gorm-psql-exampl
    isFullInfo: Boolean!
    weather: Weather! @goField(forceResolver: true)
    rate: Rate! @goField(forceResolver: true)
+   tags: [Tag!]! @goField(forceResolver: true)
 }

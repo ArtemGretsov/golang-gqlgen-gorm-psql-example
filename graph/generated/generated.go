@@ -51,6 +51,7 @@ type ComplexityRoot struct {
 		ID         func(childComplexity int) int
 		IsFullInfo func(childComplexity int) int
 		Rate       func(childComplexity int) int
+		Tags       func(childComplexity int) int
 		Weather    func(childComplexity int) int
 	}
 
@@ -95,6 +96,7 @@ type ComplexityRoot struct {
 type DayResolver interface {
 	Weather(ctx context.Context, obj *model.Day) (*model.Weather, error)
 	Rate(ctx context.Context, obj *model.Day) (*model.Rate, error)
+	Tags(ctx context.Context, obj *model.Day) ([]*model.Tag, error)
 }
 type MutationResolver interface {
 	CreateTag(ctx context.Context, input DayTag) (*model.Tag, error)
@@ -151,6 +153,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Day.Rate(childComplexity), true
+
+	case "Day.tags":
+		if e.complexity.Day.Tags == nil {
+			break
+		}
+
+		return e.complexity.Day.Tags(childComplexity), true
 
 	case "Day.weather":
 		if e.complexity.Day.Weather == nil {
@@ -365,7 +374,7 @@ directive @goField(forceResolver: Boolean, name: String) on INPUT_FIELD_DEFINITI
 type Mutation {
   createTag(input: DayTag!): Tag!
 }`, BuiltIn: false},
-	{Name: "graph/schema/querys.graphql", Input: `type Query {
+	{Name: "graph/schema/queries.graphql", Input: `type Query {
   days(day: String): [Day!]!
 }`, BuiltIn: false},
 	{Name: "graph/schema/types/day.graphql", Input: `scalar Date
@@ -376,6 +385,7 @@ type Day @goModel(model: "github.com/ArtemGretsov/golang-gqlgen-gorm-psql-exampl
    isFullInfo: Boolean!
    weather: Weather! @goField(forceResolver: true)
    rate: Rate! @goField(forceResolver: true)
+   tags: [Tag!]! @goField(forceResolver: true)
 }`, BuiltIn: false},
 	{Name: "graph/schema/types/rate.graphql", Input: `type RateDifference {
     USD: String!
@@ -666,6 +676,41 @@ func (ec *executionContext) _Day_rate(ctx context.Context, field graphql.Collect
 	res := resTmp.(*model.Rate)
 	fc.Result = res
 	return ec.marshalNRate2ᚖgithubᚗcomᚋArtemGretsovᚋgolangᚑgqlgenᚑgormᚑpsqlᚑexampleᚋgraphᚋmodelᚐRate(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Day_tags(ctx context.Context, field graphql.CollectedField, obj *model.Day) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Day",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Day().Tags(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Tag)
+	fc.Result = res
+	return ec.marshalNTag2ᚕᚖgithubᚗcomᚋArtemGretsovᚋgolangᚑgqlgenᚑgormᚑpsqlᚑexampleᚋgraphᚋmodelᚐTagᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_createTag(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2490,6 +2535,20 @@ func (ec *executionContext) _Day(ctx context.Context, sel ast.SelectionSet, obj 
 				}
 				return res
 			})
+		case "tags":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Day_tags(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -3191,6 +3250,43 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 
 func (ec *executionContext) marshalNTag2githubᚗcomᚋArtemGretsovᚋgolangᚑgqlgenᚑgormᚑpsqlᚑexampleᚋgraphᚋmodelᚐTag(ctx context.Context, sel ast.SelectionSet, v model.Tag) graphql.Marshaler {
 	return ec._Tag(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNTag2ᚕᚖgithubᚗcomᚋArtemGretsovᚋgolangᚑgqlgenᚑgormᚑpsqlᚑexampleᚋgraphᚋmodelᚐTagᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Tag) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNTag2ᚖgithubᚗcomᚋArtemGretsovᚋgolangᚑgqlgenᚑgormᚑpsqlᚑexampleᚋgraphᚋmodelᚐTag(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
 }
 
 func (ec *executionContext) marshalNTag2ᚖgithubᚗcomᚋArtemGretsovᚋgolangᚑgqlgenᚑgormᚑpsqlᚑexampleᚋgraphᚋmodelᚐTag(ctx context.Context, sel ast.SelectionSet, v *model.Tag) graphql.Marshaler {
