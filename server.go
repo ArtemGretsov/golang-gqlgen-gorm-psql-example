@@ -22,7 +22,6 @@ import (
 
 const defaultPort = "8080"
 
-
 func main() {
   err := godotenv.Load()
   if err != nil {
