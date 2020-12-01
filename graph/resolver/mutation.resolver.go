@@ -9,34 +9,29 @@ import (
   "gorm.io/gorm"
 )
 
-type DayTag struct {
-  Text string
-  ID int
-}
-
 func (m mutationResolver) CreateTag(ctx context.Context, input generated.DayTag) (*model.Tag, error) {
   existDay := model.Day{}
   if m.DB.First(&existDay, input.DayID); existDay.ID == 0 {
     graphql.AddError(ctx, gqlerror.Errorf("Day not found"))
   }
 
-  dayTag := &DayTag{}
-  m.DB.
-   Model(&model.Day{}).
-   Select("tags.text, tags.id").
-   Joins("left join day_tags on days.id = day_tags.day_id").
-   Joins("left join tags on day_tags.tag_id = tags.id").
-   Where("tags.text = ?", input.Text).
-   Where("days.id = ?", input.DayID).
-   Scan(dayTag)
+  dayTag := &model.Tag{}
+  findErr := m.DB.
+     Model(&model.Day{}).
+     Select("tags.text, tags.id").
+     Joins("left join day_tags on days.id = day_tags.day_id").
+     Joins("left join tags on day_tags.tag_id = tags.id").
+     Where("tags.text = ?", input.Text).
+     Where("days.id = ?", input.DayID).
+     Scan(dayTag).
+     Error
+
+  if findErr != nil {
+    return nil, gqlerror.Errorf("Search tag error")
+  }
 
   if dayTag.ID != 0 {
-   oldTeg := &model.Tag{
-     ID: dayTag.ID,
-     Text: input.Text,
-   }
-
-   return oldTeg, nil
+    return dayTag, nil
   }
 
   tag := &model.Tag{Text: input.Text}

@@ -2,10 +2,11 @@ package resolver
 
 import (
   "context"
-  "errors"
+  "github.com/99designs/gqlgen/graphql"
   "github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/graph/generated"
   "github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/graph/model"
   "github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/utils/calcutil"
+  "github.com/vektah/gqlparser/v2/gqlerror"
 )
 
 type dayResolver struct{ *Resolver }
@@ -25,8 +26,13 @@ func (r *Resolver) Weather() generated.WeatherResolver {
 }
 
 func (d dayResolver) Weather(ctx context.Context, obj *model.Day) (*model.Weather, error) {
-  weather := &model.Weather{}
+  weather := &model.Weather{DayID: obj.ID}
   d.DB.Find(weather, weather)
+
+  if weather.ID == 0 {
+    return nil, gqlerror.Errorf("Not found weather for day id %d", obj.ID)
+  }
+
   return weather, nil
 }
 
@@ -34,19 +40,28 @@ func (d dayResolver) Rate(ctx context.Context, obj *model.Day) (*model.Rate, err
   rate := &model.Rate{DayID: obj.ID}
   d.DB.Find(rate, rate)
 
+  if rate.ID == 0 {
+    return nil, gqlerror.Errorf("Not found rate for day id %d", obj.ID)
+  }
+
   return rate, nil
 }
 
 func (d dayResolver) Tags(ctx context.Context, obj *model.Day) ([]*model.Tag, error) {
   var tags []*model.Tag
 
-  d.DB.
+  err := d.DB.
     Model(&model.Day{}).
     Select("tags.text, tags.id").
-    Joins("left join day_tags on days.id = day_tags.day_id").
-    Joins("left join tags on day_tags.tag_id = tags.id").
+    Joins("inner join day_tags on days.id = day_tags.day_id").
+    Joins("inner join tags on day_tags.tag_id = tags.id").
     Where("days.id = ?", obj.ID).
-    Scan(&tags)
+    Scan(&tags).
+    Error
+
+  if err != nil {
+    graphql.AddErrorf(ctx, "Tags getting error for day id %d", obj.ID)
+  }
 
   return tags, nil
 }
@@ -55,12 +70,8 @@ func (r rateResolver) Difference(ctx context.Context, obj *model.Rate) (*generat
   var rate = &model.Rate{ID: obj.ID}
   r.DB.Find(rate, rate)
 
-  if rate.ID == 0 {
-    return nil, errors.New("Not found rate")
-  }
-
-  var prevRate = &model.Rate{ID: obj.ID - 1}
-  r.DB.Find(prevRate, prevRate)
+  var prevRate = &model.Rate{}
+  r.DB.Find(prevRate, model.Rate{ID: obj.ID - 1})
 
   if prevRate.ID == 0 {
     return &generated.RateDifference{
@@ -78,15 +89,11 @@ func (r rateResolver) Difference(ctx context.Context, obj *model.Rate) (*generat
 }
 
 func (w weatherResolver) Difference(ctx context.Context, obj *model.Weather) (*generated.WeatherDifference, error) {
-  var weather = &model.Weather{ID: obj.ID}
+  var weather = &model.Weather{ID: obj.ID, DayID: obj.DayID}
   w.DB.Find(weather, weather)
 
-  if weather.ID == 0 {
-    return nil, errors.New("Not found weather")
-  }
-
-  var prevWeather = &model.Weather{ID: obj.ID - 1}
-  w.DB.Find(prevWeather, prevWeather)
+  var prevWeather = &model.Weather{}
+  w.DB.Find(prevWeather, model.Weather{ID: obj.ID - 1})
 
   if prevWeather.ID == 0 {
     return &generated.WeatherDifference{

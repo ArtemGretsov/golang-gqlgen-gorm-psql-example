@@ -4,7 +4,6 @@ import (
   "errors"
   "github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/graph/model"
   "gorm.io/gorm"
-  "log"
   "time"
 )
 
@@ -19,12 +18,10 @@ func SaveDayStatistic(db *gorm.DB) error  {
   }
 
   if errWeather != nil {
-    log.Printf("Error: error getting weather")
     return errWeather
   }
 
   if errRate != nil {
-    log.Printf("Error: error getting rate")
     return errRate
   }
 
