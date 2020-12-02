@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -43,6 +44,7 @@ type ResolverRoot interface {
 }
 
 type DirectiveRoot struct {
+	Protected func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
 }
 
 type ComplexityRoot struct {
@@ -56,11 +58,13 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		CreateTag func(childComplexity int, input DayTag) int
+		CreateTag        func(childComplexity int, input DayTag) int
+		LoginUser        func(childComplexity int, input *LoginUser) int
+		RegistrationUser func(childComplexity int, input RegistrationUser) int
 	}
 
 	Query struct {
-		Days func(childComplexity int, day *string) int
+		Days func(childComplexity int, day *string, limit int, offset int) int
 	}
 
 	Rate struct {
@@ -78,6 +82,14 @@ type ComplexityRoot struct {
 	Tag struct {
 		ID   func(childComplexity int) int
 		Text func(childComplexity int) int
+	}
+
+	User struct {
+		FirstName func(childComplexity int) int
+		ID        func(childComplexity int) int
+		LastName  func(childComplexity int) int
+		Login     func(childComplexity int) int
+		Token     func(childComplexity int) int
 	}
 
 	Weather struct {
@@ -100,9 +112,11 @@ type DayResolver interface {
 }
 type MutationResolver interface {
 	CreateTag(ctx context.Context, input DayTag) (*model.Tag, error)
+	RegistrationUser(ctx context.Context, input RegistrationUser) (*User, error)
+	LoginUser(ctx context.Context, input *LoginUser) (*User, error)
 }
 type QueryResolver interface {
-	Days(ctx context.Context, day *string) ([]*model.Day, error)
+	Days(ctx context.Context, day *string, limit int, offset int) ([]*model.Day, error)
 }
 type RateResolver interface {
 	Difference(ctx context.Context, obj *model.Rate) (*RateDifference, error)
@@ -180,6 +194,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CreateTag(childComplexity, args["input"].(DayTag)), true
 
+	case "Mutation.loginUser":
+		if e.complexity.Mutation.LoginUser == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_loginUser_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.LoginUser(childComplexity, args["input"].(*LoginUser)), true
+
+	case "Mutation.registrationUser":
+		if e.complexity.Mutation.RegistrationUser == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_registrationUser_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.RegistrationUser(childComplexity, args["input"].(RegistrationUser)), true
+
 	case "Query.days":
 		if e.complexity.Query.Days == nil {
 			break
@@ -190,7 +228,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Days(childComplexity, args["day"].(*string)), true
+		return e.complexity.Query.Days(childComplexity, args["day"].(*string), args["limit"].(int), args["offset"].(int)), true
 
 	case "Rate.difference":
 		if e.complexity.Rate.Difference == nil {
@@ -247,6 +285,41 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Tag.Text(childComplexity), true
+
+	case "User.firstName":
+		if e.complexity.User.FirstName == nil {
+			break
+		}
+
+		return e.complexity.User.FirstName(childComplexity), true
+
+	case "User.id":
+		if e.complexity.User.ID == nil {
+			break
+		}
+
+		return e.complexity.User.ID(childComplexity), true
+
+	case "User.lastName":
+		if e.complexity.User.LastName == nil {
+			break
+		}
+
+		return e.complexity.User.LastName(childComplexity), true
+
+	case "User.login":
+		if e.complexity.User.Login == nil {
+			break
+		}
+
+		return e.complexity.User.Login(childComplexity), true
+
+	case "User.token":
+		if e.complexity.User.Token == nil {
+			break
+		}
+
+		return e.complexity.User.Token(childComplexity), true
 
 	case "Weather.difference":
 		if e.complexity.Weather.Difference == nil {
@@ -365,17 +438,33 @@ directive @goModel(model: String, models: [String!]) on OBJECT
     | UNION
 
 directive @goField(forceResolver: Boolean, name: String) on INPUT_FIELD_DEFINITION
-    | FIELD_DEFINITION`, BuiltIn: false},
+    | FIELD_DEFINITION
+
+directive @protected on FIELD_DEFINITION`, BuiltIn: false},
 	{Name: "graph/schema/mutations.graphql", Input: `input DayTag {
   text: String!
   dayId: Int!
 }
 
+input RegistrationUser {
+  login: String!
+  password: String!
+  firstName: String!
+  lastName: String!
+}
+
+input LoginUser {
+    login: String!
+    password: String!
+}
+
 type Mutation {
-  createTag(input: DayTag!): Tag!
+  createTag(input: DayTag!): Tag! @protected
+  registrationUser(input: RegistrationUser!): User!
+  loginUser(input: LoginUser): User!
 }`, BuiltIn: false},
 	{Name: "graph/schema/queries.graphql", Input: `type Query {
-  days(day: String): [Day!]!
+  days(day: String, limit: Int!, offset: Int!): [Day!]!
 }`, BuiltIn: false},
 	{Name: "graph/schema/types/day.graphql", Input: `scalar Date
 
@@ -402,6 +491,13 @@ type Rate @goModel(model: "github.com/ArtemGretsov/golang-gqlgen-gorm-psql-examp
    id: ID!
    text: String!
 }`, BuiltIn: false},
+	{Name: "graph/schema/types/user.graphql", Input: `type User {
+    id: Int!
+    login: String!
+    firstName: String!
+    lastName: String!
+    token: String
+}`, BuiltIn: false},
 	{Name: "graph/schema/types/weather.graphql", Input: `type WeatherDifference {
     temperature: String!
     pressure: String!
@@ -427,6 +523,36 @@ func (ec *executionContext) field_Mutation_createTag_args(ctx context.Context, r
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalNDayTag2githubᚗcomᚋArtemGretsovᚋgolangᚑgqlgenᚑgormᚑpsqlᚑexampleᚋgraphᚋgeneratedᚐDayTag(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_loginUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *LoginUser
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalOLoginUser2ᚖgithubᚗcomᚋArtemGretsovᚋgolangᚑgqlgenᚑgormᚑpsqlᚑexampleᚋgraphᚋgeneratedᚐLoginUser(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_registrationUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 RegistrationUser
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNRegistrationUser2githubᚗcomᚋArtemGretsovᚋgolangᚑgqlgenᚑgormᚑpsqlᚑexampleᚋgraphᚋgeneratedᚐRegistrationUser(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -462,6 +588,24 @@ func (ec *executionContext) field_Query_days_args(ctx context.Context, rawArgs m
 		}
 	}
 	args["day"] = arg0
+	var arg1 int
+	if tmp, ok := rawArgs["limit"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+		arg1, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["limit"] = arg1
+	var arg2 int
+	if tmp, ok := rawArgs["offset"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("offset"))
+		arg2, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["offset"] = arg2
 	return args, nil
 }
 
@@ -737,8 +881,28 @@ func (ec *executionContext) _Mutation_createTag(ctx context.Context, field graph
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateTag(rctx, args["input"].(DayTag))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().CreateTag(rctx, args["input"].(DayTag))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.Protected == nil {
+				return nil, errors.New("directive protected is not implemented")
+			}
+			return ec.directives.Protected(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Tag); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/graph/model.Tag`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -753,6 +917,90 @@ func (ec *executionContext) _Mutation_createTag(ctx context.Context, field graph
 	res := resTmp.(*model.Tag)
 	fc.Result = res
 	return ec.marshalNTag2ᚖgithubᚗcomᚋArtemGretsovᚋgolangᚑgqlgenᚑgormᚑpsqlᚑexampleᚋgraphᚋmodelᚐTag(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_registrationUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_registrationUser_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().RegistrationUser(rctx, args["input"].(RegistrationUser))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*User)
+	fc.Result = res
+	return ec.marshalNUser2ᚖgithubᚗcomᚋArtemGretsovᚋgolangᚑgqlgenᚑgormᚑpsqlᚑexampleᚋgraphᚋgeneratedᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_loginUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_loginUser_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().LoginUser(rctx, args["input"].(*LoginUser))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*User)
+	fc.Result = res
+	return ec.marshalNUser2ᚖgithubᚗcomᚋArtemGretsovᚋgolangᚑgqlgenᚑgormᚑpsqlᚑexampleᚋgraphᚋgeneratedᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_days(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -780,7 +1028,7 @@ func (ec *executionContext) _Query_days(ctx context.Context, field graphql.Colle
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Days(rctx, args["day"].(*string))
+		return ec.resolvers.Query().Days(rctx, args["day"].(*string), args["limit"].(int), args["offset"].(int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1146,6 +1394,178 @@ func (ec *executionContext) _Tag_text(ctx context.Context, field graphql.Collect
 	res := resTmp.(string)
 	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _User_id(ctx context.Context, field graphql.CollectedField, obj *User) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _User_login(ctx context.Context, field graphql.CollectedField, obj *User) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Login, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _User_firstName(ctx context.Context, field graphql.CollectedField, obj *User) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FirstName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _User_lastName(ctx context.Context, field graphql.CollectedField, obj *User) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LastName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _User_token(ctx context.Context, field graphql.CollectedField, obj *User) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Token, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Weather_id(ctx context.Context, field graphql.CollectedField, obj *model.Weather) (ret graphql.Marshaler) {
@@ -2473,6 +2893,78 @@ func (ec *executionContext) unmarshalInputDayTag(ctx context.Context, obj interf
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputLoginUser(ctx context.Context, obj interface{}) (LoginUser, error) {
+	var it LoginUser
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "login":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("login"))
+			it.Login, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "password":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
+			it.Password, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputRegistrationUser(ctx context.Context, obj interface{}) (RegistrationUser, error) {
+	var it RegistrationUser
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "login":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("login"))
+			it.Login, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "password":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
+			it.Password, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "firstName":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("firstName"))
+			it.FirstName, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "lastName":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastName"))
+			it.LastName, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -2577,6 +3069,16 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = graphql.MarshalString("Mutation")
 		case "createTag":
 			out.Values[i] = ec._Mutation_createTag(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "registrationUser":
+			out.Values[i] = ec._Mutation_registrationUser(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "loginUser":
+			out.Values[i] = ec._Mutation_loginUser(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -2739,6 +3241,50 @@ func (ec *executionContext) _Tag(ctx context.Context, sel ast.SelectionSet, obj 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var userImplementors = []string{"User"}
+
+func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj *User) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, userImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("User")
+		case "id":
+			out.Values[i] = ec._User_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "login":
+			out.Values[i] = ec._User_login(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "firstName":
+			out.Values[i] = ec._User_firstName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "lastName":
+			out.Values[i] = ec._User_lastName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "token":
+			out.Values[i] = ec._User_token(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -3233,6 +3779,11 @@ func (ec *executionContext) marshalNRateDifference2ᚖgithubᚗcomᚋArtemGretso
 	return ec._RateDifference(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNRegistrationUser2githubᚗcomᚋArtemGretsovᚋgolangᚑgqlgenᚑgormᚑpsqlᚑexampleᚋgraphᚋgeneratedᚐRegistrationUser(ctx context.Context, v interface{}) (RegistrationUser, error) {
+	res, err := ec.unmarshalInputRegistrationUser(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
 	res, err := graphql.UnmarshalString(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -3297,6 +3848,20 @@ func (ec *executionContext) marshalNTag2ᚖgithubᚗcomᚋArtemGretsovᚋgolang�
 		return graphql.Null
 	}
 	return ec._Tag(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNUser2githubᚗcomᚋArtemGretsovᚋgolangᚑgqlgenᚑgormᚑpsqlᚑexampleᚋgraphᚋgeneratedᚐUser(ctx context.Context, sel ast.SelectionSet, v User) graphql.Marshaler {
+	return ec._User(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNUser2ᚖgithubᚗcomᚋArtemGretsovᚋgolangᚑgqlgenᚑgormᚑpsqlᚑexampleᚋgraphᚋgeneratedᚐUser(ctx context.Context, sel ast.SelectionSet, v *User) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._User(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNWeather2githubᚗcomᚋArtemGretsovᚋgolangᚑgqlgenᚑgormᚑpsqlᚑexampleᚋgraphᚋmodelᚐWeather(ctx context.Context, sel ast.SelectionSet, v model.Weather) graphql.Marshaler {
@@ -3578,6 +4143,14 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 		return graphql.Null
 	}
 	return graphql.MarshalBoolean(*v)
+}
+
+func (ec *executionContext) unmarshalOLoginUser2ᚖgithubᚗcomᚋArtemGretsovᚋgolangᚑgqlgenᚑgormᚑpsqlᚑexampleᚋgraphᚋgeneratedᚐLoginUser(ctx context.Context, v interface{}) (*LoginUser, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputLoginUser(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOString2string(ctx context.Context, v interface{}) (string, error) {

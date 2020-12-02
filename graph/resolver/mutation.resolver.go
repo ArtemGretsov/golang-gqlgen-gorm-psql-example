@@ -5,9 +5,17 @@ import (
   "github.com/99designs/gqlgen/graphql"
   "github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/graph/generated"
   "github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/graph/model"
+  "github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/utils/authutil"
   "github.com/vektah/gqlparser/v2/gqlerror"
+  "golang.org/x/crypto/bcrypt"
   "gorm.io/gorm"
 )
+
+type mutationResolver struct { *Resolver }
+
+func (r* Resolver) Mutation() generated.MutationResolver  {
+  return &mutationResolver{r}
+}
 
 func (m mutationResolver) CreateTag(ctx context.Context, input generated.DayTag) (*model.Tag, error) {
   existDay := model.Day{}
@@ -54,4 +62,67 @@ func (m mutationResolver) CreateTag(ctx context.Context, input generated.DayTag)
   }
 
   return tag, nil
+}
+
+func (m mutationResolver) RegistrationUser(ctx context.Context, input generated.RegistrationUser) (*generated.User, error) {
+  const RegistrationError = "Registration error"
+  var user model.User
+  if err := m.DB.Find(&user, model.User{Login: input.Login}).Error; err != nil {
+    return nil, gqlerror.Errorf(RegistrationError)
+  }
+
+  if user.ID != 0 {
+    return nil, gqlerror.Errorf("User with login '%s' already exist", input.Login)
+  }
+
+  hashedPassword, err := authutil.HashPassword(input.Password)
+
+  if err != nil {
+    return nil, gqlerror.Errorf(RegistrationError)
+  }
+
+  newUser := model.User{
+    Password: hashedPassword,
+    Login: input.Login,
+    FirstName: input.FirstName,
+    LastName: input.LastName,
+  }
+
+  if err := m.DB.Create(&newUser).Error; err != nil {
+    return nil, gqlerror.Errorf(RegistrationError)
+  }
+
+  return &generated.User{
+    ID: newUser.ID,
+    Login: input.Login,
+    FirstName: input.FirstName,
+    LastName: input.LastName,
+  }, nil
+}
+
+func (m mutationResolver) LoginUser(ctx context.Context, input *generated.LoginUser) (*generated.User, error) {
+  const LoginUserError = "Login user error"
+  var user model.User
+
+  if err := m.DB.Find(&user, model.User{Login: input.Login}).Error; err != nil {
+    return nil, gqlerror.Errorf(LoginUserError)
+  }
+
+  if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password)); err != nil {
+    return nil, gqlerror.Errorf("Incorrect login or password")
+  }
+
+  token, err := authutil.CreateJwtToken(user)
+
+  if err != nil {
+    return nil, gqlerror.Errorf(LoginUserError)
+  }
+
+  return &generated.User{
+    Login: input.Login,
+    FirstName: user.FirstName,
+    LastName: user.LastName,
+    ID: user.ID,
+    Token: &token,
+  }, nil
 }

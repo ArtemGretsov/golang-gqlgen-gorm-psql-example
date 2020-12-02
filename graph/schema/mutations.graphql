@@ -3,6 +3,20 @@ input DayTag {
   dayId: Int!
 }
 
+input RegistrationUser {
+  login: String!
+  password: String!
+  firstName: String!
+  lastName: String!
+}
+
+input LoginUser {
+    login: String!
+    password: String!
+}
+
 type Mutation {
-  createTag(input: DayTag!): Tag!
+  createTag(input: DayTag!): Tag! @protected
+  registrationUser(input: RegistrationUser!): User!
+  loginUser(input: LoginUser): User!
 }

@@ -3,6 +3,7 @@ package main
 import (
   "fmt"
   cronjob "github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/cron"
+  "github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/graph/directive"
   "github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/graph/model"
   "github.com/ArtemGretsov/golang-gqlgen-gorm-psql-example/graph/resolver"
   "github.com/joho/godotenv"
@@ -24,8 +25,7 @@ const defaultPort = "8080"
 
 
 func main() {
-  err := godotenv.Load()
-  if err != nil {
+  if err := godotenv.Load(); err != nil {
     log.Fatal("Error loading .env file")
   }
 
@@ -38,7 +38,9 @@ func main() {
   db := connectDatabase()
   cronjob.Start(db)
 
-  srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &resolver.Resolver{DB: db}}))
+  configGraphQl := generated.Config{Resolvers: &resolver.Resolver{DB: db}}
+  directive.SetDirectives(&configGraphQl)
+  srv := handler.NewDefaultServer(generated.NewExecutableSchema(configGraphQl))
 
   log.Printf("Server started! Port: " + port)
   http.Handle("/", playground.Handler("GraphQL playground", "/querys"))
@@ -64,6 +66,7 @@ func connectDatabase() *gorm.DB {
     &model.Weather{},
     &model.Rate{},
     &model.Tag{},
+    &model.User{},
   )
 
   if mErr != nil {

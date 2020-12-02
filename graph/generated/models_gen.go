@@ -7,9 +7,29 @@ type DayTag struct {
 	DayID int    `json:"dayId"`
 }
 
+type LoginUser struct {
+	Login    string `json:"login"`
+	Password string `json:"password"`
+}
+
 type RateDifference struct {
 	Usd string `json:"USD"`
 	Eur string `json:"EUR"`
+}
+
+type RegistrationUser struct {
+	Login     string `json:"login"`
+	Password  string `json:"password"`
+	FirstName string `json:"firstName"`
+	LastName  string `json:"lastName"`
+}
+
+type User struct {
+	ID        int     `json:"id"`
+	Login     string  `json:"login"`
+	FirstName string  `json:"firstName"`
+	LastName  string  `json:"lastName"`
+	Token     *string `json:"token"`
 }
 
 type WeatherDifference struct {
