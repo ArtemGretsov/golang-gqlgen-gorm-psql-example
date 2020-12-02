@@ -25,38 +25,7 @@ Monitoring system. Every day the system calls a third-party API.
 
 ```graphql
 query {
-  days {
-    id
-    date
-    rate {
-      id
-      USD
-      EUR
-      difference {
-        EUR
-        USD
-      }
-    }
-    weather {
-      id
-      pressure
-      temperature
-      difference {
-        pressure
-        temperature
-      }
-    }
-    tags {
-      id
-      text
-    }
-  }
-}
-```
-
-```graphql
-query {
-  days(day: "2020-12-12") {
+  days(day: "2020-12-12", offset: 0, limit: 10) {
     id
     date
     rate {
