@@ -24,16 +24,7 @@ Monitoring system. Every day the system calls a third-party API.
 ## Sample Queries
 
 ```graphql
-mutation createTag {
-  createTag(input: { text: "tag", dayId: 1 }) {
-    id
-    text
-  }
-}
-```
-
-```graphql
-query findDays {
+query {
   days {
     id
     date
@@ -64,7 +55,7 @@ query findDays {
 ```
 
 ```graphql
-query findDays {
+query {
   days(day: "2020-12-12") {
     id
     date
@@ -90,6 +81,36 @@ query findDays {
       id
       text
     }
+  }
+}
+```
+
+```graphql
+mutation {
+  createTag(input: { text: "tag", dayId: 1 }) {
+    id
+    text
+  }
+}
+```
+
+```graphql
+mutation {
+  registrationUser(input: { login: "login", password: "password", firstName: "Artem", lastName: "Gretsov"}) {
+    id
+    firstName
+    lastName
+  }
+}
+```
+
+```graphql
+mutation {
+  loginUser(input: { login: "login", password: "password"}) {
+    id
+    token
+    firstName
+    lastName
   }
 }
 ```
