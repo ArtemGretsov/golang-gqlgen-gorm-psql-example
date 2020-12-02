@@ -65,7 +65,7 @@ mutation {
 
 ```graphql
 mutation {
-  registrationUser(input: { login: "login", password: "password", firstName: "Artem", lastName: "Gretsov"}) {
+  registrationUser(input: { login: "login", password: "password", firstName: "Artem", lastName: "Gretsov" }) {
     id
     firstName
     lastName
@@ -75,7 +75,7 @@ mutation {
 
 ```graphql
 mutation {
-  loginUser(input: { login: "login", password: "password"}) {
+  loginUser(input: { login: "login", password: "password" }) {
     id
     token
     firstName
