@@ -4,9 +4,9 @@ Example project.
 
 Monitoring system. Every day the system calls a third-party API.
 
-- You can get information about the day via GraphQL API
+- You can get information about the day via GraphQL API.
 - You can track statistical changes (object `difference`). 
-- You can add #hashtags to each day.
+- You can add #hashtags to each day. To do this, you need to log in.
 
 
 #### Collected data
