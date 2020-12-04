@@ -21,6 +21,24 @@ Monitoring system. Every day the system calls a third-party API.
   - PostgreSQL
   - Cron jobs
 
+### Launch of the project
+1. Install GO 1.13 or greater
+2. If you want the application to collect weather data - register on https://openweathermap.org/ and get your personal API-KEY
+3. In the root of the project create a file named `.env` with the contents 
+```
+WEATHER_API_KEY="The key obtained in step 1"
+PORT=5000
+DB_NAME=go
+DB_PORT=5432
+DB_PASS=go
+DB_USER=go
+DB_HOST=localhost
+JWT_KEY=KJdq1LOOkdm23eofoef8wewqoOjonwdn0weWQEpqe2oom3
+```
+4. Start the database. This is easy to do via `docker`. Run `docker-compose up -d postgres`
+5. Run `go run server.go`
+
+
 ## Sample Queries
 
 ```graphql
