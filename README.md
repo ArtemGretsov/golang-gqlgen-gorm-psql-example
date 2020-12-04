@@ -21,7 +21,7 @@ Monitoring system. Every day the system calls a third-party API.
   - PostgreSQL
   - Cron jobs
 
-### Launch of the project
+## Launch of the project
 1. Install GO 1.13 or greater
 2. If you want the application to collect weather data - register on https://openweathermap.org/ and get your personal API-KEY
 3. In the root of the project create a file named `.env` with the contents 
